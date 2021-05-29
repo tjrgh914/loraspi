@@ -28,8 +28,8 @@ class RxTx(Runnable):
         _setupGPIO()
 
     def on_start(self):
-        log.debug("Using serial: {} | Baud: {}", self._dev, )
-        self._serial = Serial(self._dev, 9600)
+        log.debug("Using serial: {} | Baud: {}", self._dev, self._baud_rate)
+        self._serial = Serial(self._dev, self._baud_rate)
         self._serial.flushInput()
         self._serial.write(self.CFG_REG[0])
 
