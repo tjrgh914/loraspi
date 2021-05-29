@@ -1,6 +1,7 @@
-from loraspi import GPIO, M0, M1, Serial, sleep, log
-from runnable import Runnable
+from os.path import exists
 from typing import Optional
+from runnable import Runnable
+from loraspi import GPIO, M0, M1, Serial, sleep, log
 
 
 def _setupGPIO():
@@ -28,10 +29,19 @@ class RxTx(Runnable):
         _setupGPIO()
 
     def on_start(self):
-        log.debug("Using serial: {} | Baud: {}", self._dev, self._baud_rate)
-        self._serial = Serial(self._dev, self._baud_rate)
-        self._serial.flushInput()
-        self._serial.write(self.CFG_REG[0])
+        if exists(self._dev):
+            log.debug("Using serial: {} | Baud: {}", self._dev, self._baud_rate)
+            self._serial = Serial(self._dev, self._baud_rate)
+            self._serial.flushInput()
+            self._serial.write(self.CFG_REG[0])
+        else:
+            log.error("Device '{}' does not exist.", self._dev)
+            self.do_run = False
+
+    def on_stop(self):
+        if self._serial and self._serial.isOpen():
+            self._serial.close()
+        GPIO.cleanup()
 
     def on_reg_0(self):
         log.warning("This method should be overridden")
@@ -40,6 +50,7 @@ class RxTx(Runnable):
         log.info("Received message: {}", self._buffer)
 
     def work(self):
+        log.debug("weee")
         if self._serial.inWaiting() > 0:
             sleep(0.1)
             self._buffer = self._serial.read(self._serial.inWaiting())
@@ -53,14 +64,9 @@ class RxTx(Runnable):
 
     def run(self) -> None:
         self.on_start()
-        while self._serial.isOpen() and self.do_run:
+        while self.do_run and self._serial.isOpen():
             self.work()
         self.on_stop()
 
     def send_message(self, msg: bytes):
         self._serial.write(msg)
-
-    def __del__(self):
-        if self._serial.isOpen():
-            self._serial.close()
-        GPIO.cleanup()
