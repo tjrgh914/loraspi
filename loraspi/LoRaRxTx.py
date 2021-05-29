@@ -50,9 +50,7 @@ class RxTx(Runnable):
         log.info("Received message: {}", self._buffer)
 
     def work(self):
-        log.debug("weee")
         if self._serial.inWaiting() > 0:
-            sleep(0.1)
             self._buffer = self._serial.read(self._serial.inWaiting())
             if self._buffer == self.RET_REG[0]:
                 self.on_reg_0()
