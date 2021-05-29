@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 setup(
     long_description=open("README.md", "r").read(),
     name="loraspi",
-    version="1.5",
+    version="1.6",
     description="library for lora stuff",
     author="Pascal Eberlein",
     author_email="pascal@eberlein.io",
