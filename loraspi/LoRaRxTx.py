@@ -1,7 +1,7 @@
 from os.path import exists
 from typing import Optional
 from runnable import Runnable
-from loraspi import GPIO, M0, M1, Serial, sleep, log
+from loraspi import GPIO, M0, M1, Serial, log
 
 
 def _setupGPIO():
@@ -14,8 +14,8 @@ def _setupGPIO():
 
 
 class RxTx(Runnable):
-    CFG_REG = None
-    RET_REG = None
+    CFG_REG: bytes = None
+    RET_REG: bytes = None
 
     _serial: Serial = None
     _buffer: Optional[bytes] = ""
@@ -33,7 +33,7 @@ class RxTx(Runnable):
             log.debug("Using serial: {} | Baud: {}", self._dev, self._baud_rate)
             self._serial = Serial(self._dev, self._baud_rate)
             self._serial.flushInput()
-            self._serial.write(self.CFG_REG[0])
+            self._serial.write(self.CFG_REG)
         else:
             log.error("Device '{}' does not exist.", self._dev)
             self.do_run = False
@@ -52,7 +52,7 @@ class RxTx(Runnable):
     def work(self):
         if self._serial.inWaiting() > 0:
             self._buffer = self._serial.read(self._serial.inWaiting())
-            if self._buffer == self.RET_REG[0]:
+            if self._buffer == self.RET_REG:
                 self.on_reg_0()
                 GPIO.output(M1, GPIO.LOW)
                 self._buffer = b""
